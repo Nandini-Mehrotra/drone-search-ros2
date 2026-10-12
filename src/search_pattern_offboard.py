@@ -304,7 +304,8 @@ def main():
         # Stopping an armed offboard controller can trigger PX4's
         # configured offboard-loss failsafe. Test only in simulation.
         node.destroy_node()
-        rclpy.shutdown()
+        if rclpy.ok():
+            rclpy.shutdown()
 
 
 if __name__ == "__main__":
