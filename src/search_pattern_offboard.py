@@ -5,6 +5,8 @@ import argparse
 import math
 import time
 
+from search_math import figure_eight, outside_geofence
+
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy, HistoryPolicy
@@ -143,13 +145,12 @@ class DroneSearchController(Node):
         if self.position is None or self.home is None:
             return False
 
-        dx = self.position.x - self.home[0]
-        dy = self.position.y - self.home[1]
-        height = self.home[2] - self.position.z
-
-        radius = math.hypot(dx, dy)
-
-        return radius > self.max_radius or height > self.max_height
+        return outside_geofence(
+            (self.position.x, self.position.y, self.position.z),
+            self.home,
+            self.max_radius,
+            self.max_height,
+        )
 
     def request_landing(self):
         if self.land_requested:
@@ -258,13 +259,15 @@ class DroneSearchController(Node):
                 self.request_landing()
                 return
 
-            # Figure-8 trajectory in the local NED coordinate frame.
-            omega = 2 * math.pi / 20.0
-            x = self.home[0] + self.search_radius * math.sin(omega * elapsed)
-            y = self.home[1] + 0.5 * self.search_radius * math.sin(
-                2 * omega * elapsed
+            # Tested Figure-8 trajectory in NED coordinates.
+            x, y, z = figure_eight(
+                elapsed_s=elapsed,
+                home=self.home,
+                amplitude_x=self.search_radius,
+                amplitude_y=0.5 * self.search_radius,
+                period_s=20.0,
+                altitude_m=self.takeoff_height,
             )
-            z = self.home[2] - self.takeoff_height
 
             self.publish_offboard_heartbeat()
             self.publish_setpoint(x, y, z)
