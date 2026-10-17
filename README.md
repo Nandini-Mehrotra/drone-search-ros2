@@ -1,26 +1,75 @@
-# PX4 Autonomous Search & Geofence Fail-Safe
+# Autonomous UAV Search and Geofence Fail-Safe Controller
 
-ROS 2 and PX4-based autonomous UAV simulation project for testing
-search trajectories and safety-aware flight behavior.
+**ROS 2 Jazzy · PX4 SITL · Gazebo X500 · Python · Micro XRCE-DDS**
 
-## Planned Features
+## Objective
 
-- PX4 SITL + Gazebo simulation
-- ROS 2 offboard control
-- Autonomous takeoff and landing
-- Figure-8 aerial search trajectory
-- Dynamic altitude and radial geofence monitoring
-- Automatic landing on geofence violation
-- Flight testing and result analysis
+Develop and validate a simulation-based autonomous mission controller that commands takeoff, generates a Figure-8 search path, monitors a configurable geofence, and requests landing when mission completion or a boundary breach occurs.
 
-## Project Structure
+## Current verification status
 
-- `src/` - ROS 2 flight-control source code
-- `launch/` - launch configurations
-- `config/` - mission configuration
-- `docs/` - architecture and technical documentation
-- `results/` - simulation test results
+- **Verified:** ROS 2–PX4 message transport and live local-position telemetry; controller dry-run received telemetry in a previous session.
+- **Implemented but not flight-verified:** mission state machine, Figure-8 setpoints, geofence check, landing requests.
+- **Pending:** preflight/GCS resolution, autonomous flight, failsafe landing test, and flight log evidence.
 
-## Status
+Do not interpret passing unit tests as proof of safe autonomous flight.
 
-🚧 Under active development.
+## Architecture
+
+See [docs/architecture.md](docs/architecture.md) for the data flow, topic names, and PX4 NED coordinate system.
+
+## Repository layout
+
+- `src/search_pattern_offboard.py` — existing ROS 2 flight controller (preserve your original file).
+- `src/search_math.py` — pure Figure-8 and geofence mathematics, independently testable.
+- `tests/test_search_math.py` — standard-library unit tests.
+- `config/mission.yaml` — reference mission settings; **not yet wired to the controller**.
+- `docs/technical_explanation.md` — engineering and interview explanation.
+- `docs/testing.md` — test plan and evidence checklist.
+
+## Environment used
+
+Ubuntu 24.04 (WSL), ROS 2 Jazzy, PX4 SITL, Gazebo X500, and Micro XRCE-DDS Agent. PX4 message definitions must match the PX4 checkout used to build the simulator.
+
+## Start the simulation
+
+Terminal 1:
+
+```bash
+MicroXRCEAgent udp4 -p 8888
+```
+
+Terminal 2:
+
+```bash
+cd ~/PX4-Autopilot
+make px4_sitl gz_x500
+```
+
+Terminal 3:
+
+```bash
+source /opt/ros/jazzy/setup.bash
+source ~/ros2_px4_ws/install/setup.bash
+cd ~/projects/px4-autonomous-search
+ros2 topic list | grep /fmu
+python3 src/search_pattern_offboard.py
+```
+
+The controller starts in dry-run mode. Do not enable `--fly` until the PX4 preflight and controller safety checks are resolved.
+
+## Automated tests
+
+```bash
+python3 -m unittest discover -s tests -v
+```
+
+These tests cover trajectory math and geofence boundaries; they are **not** end-to-end flight tests.
+
+## Safety and limitations
+
+Simulation only. Current flight-controller code requires additional validation for command acknowledgments, stale telemetry, state timeouts, and failsafe behavior. Do not use on physical aircraft without appropriate engineering review, hardware validation, and safety procedures.
+
+## Project explanation
+
+See [docs/technical_explanation.md](docs/technical_explanation.md) for the engineering rationale, coordinate conventions, and interview Q&A.

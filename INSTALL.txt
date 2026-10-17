@@ -1,0 +1,13 @@
+Extract this archive INTO your existing ~/projects/px4-autonomous-search directory.
+It does not contain or replace your existing src/search_pattern_offboard.py.
+It DOES replace README.md with an accurate portfolio README.
+Before extracting, back up your existing README if you want to preserve it.
+
+Commands (from Ubuntu shell):
+cd ~/projects/px4-autonomous-search
+cp README.md README.previous.md  # only if README.md already exists
+unzip -o /path/to/uav_portfolio_pack.zip
+python3 -m unittest discover -s tests -v
+python3 -m py_compile src/search_pattern_offboard.py
+
+Do not run --fly until preflight and safety behavior are validated.

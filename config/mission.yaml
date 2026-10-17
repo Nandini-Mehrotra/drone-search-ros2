@@ -1,0 +1,11 @@
+# Documentation/reference configuration. The current controller uses in-code
+# constants; this YAML is NOT automatically loaded until integration is added.
+mission:
+  takeoff_altitude_m: 5.0
+  figure_eight_amplitude_x_m: 6.0
+  figure_eight_amplitude_y_m: 3.0
+  figure_eight_period_s: 20.0
+  search_duration_s: 45.0
+  geofence_radius_m: 12.0
+  geofence_max_altitude_m: 8.0
+  setpoint_rate_hz: 10.0
